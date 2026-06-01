@@ -150,7 +150,55 @@ class EmpController{
               });
         }
     }
-    
+    async searchEmployee(req,res){
+        try {
+            const {
+                keyword="",
+                page=1,
+                limit=5,
+                sort='name'
+            } = req.query;
+
+            const skip = (page - 1)* limit;
+
+            // search employee
+            
+            const employees = await Emp.find({
+                fullName:{
+                    $regex : keyword,
+                    $options:'i'
+                }
+            })
+            .sort(sort)
+            .skip(skip)
+            .limit(Number(limit))
+
+            const totlaEmployees = await Emp.countDocuments({
+                fullName:{
+                    $regex : keyword,
+                    $options:'i'
+                }
+            });
+            return res.status(200)
+                        .json({
+                            status:true,
+                            currentPage:Number(page),
+                            totalPage:Math.ceil(totlaEmployees / limit),
+                            totlaEmployees,
+                            message:"Employee fetched successfully",
+                            data:employees
+                        })
+        } catch (error) {
+            return res.status(500)
+                        .json({
+                            status:false,
+                            message:"Something went wrong in Seacrch Employee",
+                            error:error.message
+                        })
+        }
+
+    }
+
 }
 
 module.exports = new EmpController();
